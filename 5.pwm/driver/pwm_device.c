@@ -7,48 +7,47 @@
 
 static int pwmdevice_test_probe(struct platform_device *pdev)
 {
-  struct pwm_device *pwm;
+    struct pwm_device *pwm;
 
-  printk("pwmdevice test probe\n");
-  pwm = pwm_get(&pdev->dev, NULL);
-  if (IS_ERR(pwm)) {
-		int err = PTR_ERR(pwm);
-    dev_err(&pdev->dev, "pwm_get failed: %d\n", err);
-		return err;
-	}
+    printk("pwmdevice test probe\n");
+    pwm = pwm_get(&pdev->dev, NULL);
+    if (IS_ERR(pwm)) {
+        int err = PTR_ERR(pwm);
+        dev_err(&pdev->dev, "pwm_get failed: %d\n", err);
+        return err;
+    }
 
-  platform_set_drvdata(pdev, pwm);
-  
-  pwm_config(pwm, 500000, 1000000);
-  pwm_enable(pwm);
+    platform_set_drvdata(pdev, pwm);
 
-  return  0;
+    pwm_config(pwm, 500000, 1000000);
+    pwm_enable(pwm);
+
+    return 0;
 }
 
 static int pwmdevice_test_remove(struct platform_device *pdev)
 {
-  struct pwm_device *pwm;
+    struct pwm_device *pwm;
 
-  printk("pwmdevice test remove\n");
-  pwm = platform_get_drvdata(pdev);
-  pwm_disable(pwm);
-  pwm_put(pwm);
+    printk("pwmdevice test remove\n");
+    pwm = platform_get_drvdata(pdev);
+    pwm_disable(pwm);
+    pwm_put(pwm);
 
-  return 0;
+    return 0;
 }
 
 static const struct of_device_id pwmdevice_test_of_match[] = {
-  { .compatible = "pwmdevice-test" },
-  {/* Sentinel */}
-};
+    {.compatible = "pwmdevice-test"}, {/* Sentinel */}};
 
 static struct platform_driver pwmdevice_test_driver = {
-  .probe = pwmdevice_test_probe,
-  .remove = pwmdevice_test_remove,
-  .driver = {
-    .name = "pwmdevice-test",
-    .of_match_table = pwmdevice_test_of_match,
-  },
+    .probe = pwmdevice_test_probe,
+    .remove = pwmdevice_test_remove,
+    .driver =
+        {
+            .name = "pwmdevice-test",
+            .of_match_table = pwmdevice_test_of_match,
+        },
 };
 
 module_platform_driver(pwmdevice_test_driver);
