@@ -7,30 +7,30 @@ static ktime_t kt;
 
 static enum hrtimer_restart hrtimer_handler(struct hrtimer *timer)
 {
-  printk("hrtimer handler\n");
-  hrtimer_forward(timer, timer->base->get_time(), kt);
+    printk("hrtimer handler\n");
+    hrtimer_forward(timer, timer->base->get_time(), kt);
 
-  //return HRTIMER_NORESTART;//不重启定时器
-  return HRTIMER_RESTART;//重启定时器
+    // return HRTIMER_NORESTART;//不重启定时器
+    return HRTIMER_RESTART; //重启定时器
 }
 
 static int hrtimer_drv_init(void)
 {
-  printk("hrtimer drv init\n");
+    printk("hrtimer drv init\n");
 
-  kt = ktime_set(1, 10); /* 1 sec, 10 nsec */
-  hrtimer_init(&hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-  hrtimer.function = hrtimer_handler;
-  hrtimer_start(&hrtimer, kt, HRTIMER_MODE_REL);
+    kt = ktime_set(1, 10); /* 1 sec, 10 nsec */
+    hrtimer_init(&hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+    hrtimer.function = hrtimer_handler;
+    hrtimer_start(&hrtimer, kt, HRTIMER_MODE_REL);
 
-  return  0;
+    return 0;
 }
 
 static void hrtimer_drv_exit(void)
 {
-  printk( "hrtimer drv exit\n");
+    printk("hrtimer drv exit\n");
 
-  hrtimer_cancel(&hrtimer);
+    hrtimer_cancel(&hrtimer);
 }
 
 module_init(hrtimer_drv_init);
