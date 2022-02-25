@@ -1,0 +1,17 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			dts_test: dts_test@0 {
+                compatible = "dts-test";
+                dts-test-bool;
+                dts-test-u32 = <0x12345678>;
+                dts-test-string = "hello dts";
+                dts-test-u32-array = <0x12 0x34 0x56 0x78>;
+            };
+		};
+	};
+};
