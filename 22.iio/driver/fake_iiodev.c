@@ -14,7 +14,7 @@ struct fake_iiodev_priv {
     unsigned char current_lux[2]; //当前光照度
     struct timer_list timer;      //用于模拟光照度变化的定时器
     unsigned int freq;            //光照度变化频率
-    bool event[2];                //事件是能与否
+    bool event[2];                //事件使能与否
     unsigned char high_thresh[2]; //阈值上限
     unsigned char low_thresh[2];  //阈值下限
     struct mutex lock;
@@ -84,10 +84,12 @@ static int fake_iiodev_read_raw(struct iio_dev *iio,
         *val2 = 0;
         *val = priv->current_lux[chan->scan_index];
         ret = IIO_VAL_INT;
+        break;
     case IIO_CHAN_INFO_INT_TIME:
         *val2 = 0;
         *val = priv->freq;
         ret = IIO_VAL_INT;
+        break;
     default:
         ret = -EINVAL;
     }
