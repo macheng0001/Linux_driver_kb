@@ -1,4 +1,4 @@
-obj-m := fake_gpiochip.o gpio_consumer.o
+obj-m := virt_gpiochip.o gpio_consumer.o
 SRC := $(shell pwd)
 
 all:
