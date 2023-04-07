@@ -60,7 +60,7 @@ static int virt_mtd_write(struct mtd_info *mtd, loff_t to, size_t len,
 {
     struct virt_mtd_priv *priv = mtd->priv;
     printk("%s,%lld,%x\n", __func__, to, len);
-    memcpy(priv->buffer + +to, buf, len);
+    memcpy(priv->buffer + to, buf, len);
     *retlen = len;
     return 0;
 }
