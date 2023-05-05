@@ -7,6 +7,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/module.h>
+#include <linux/uaccess.h>
 
 /* 设备节点名称 */
 #define DEVICE_NAME "char_dev"
@@ -19,11 +20,14 @@
 /* 次设备号 */
 #define DEV_MINOR 0
 
+#define MEM_SIZE 1024
+
 struct char_dev {
     dev_t devid;           //设备号
     struct cdev cdev;      //字符设备
     struct class *class;   //类
     struct device *device; //设备节点
+    unsigned char mem[MEM_SIZE];
 };
 
 static struct char_dev char_dev = {
@@ -40,39 +44,94 @@ static int char_dev_open(struct inode *inode, struct file *file)
 
     printk("device name:%s\n", dev_name(dev->device));
     printk("driver data device name:%s\n", dev_name(drvdata->device));
-    printk("char dev open\n");
+    printk("%s\n", __func__);
 
     file->private_data = dev;
+    memset(dev->mem, 0, sizeof(dev->mem));
     return 0;
 }
 
 static ssize_t char_dev_write(struct file *file, const char __user *buf,
                               size_t len, loff_t *loff_t)
 {
-    int rst, i;
-    char write_buf[5] = {0};
+    int ret;
+    unsigned long p = *loff_t;
     struct char_dev *dev = file->private_data;
-    len = len > 5 ? 5 : len;
 
-    printk("char dev write\n");
+    printk("%s\n", __func__);
     printk("file private data---device name:%s\n", dev_name(dev->device));
 
-    rst = copy_from_user(write_buf, buf, len);
-    if (0 != rst) {
-        return -1;
+    if (p >= MEM_SIZE)
+        return 0;
+    if (len > MEM_SIZE - p)
+        len = MEM_SIZE - p;
+
+    ret = copy_from_user(dev->mem + p, buf, len);
+    if (ret == 0) {
+        *loff_t += len;
+        ret = len;
+        printk("witten %u bytes from %lu\n", len, p);
+    } else {
+        ret = -EFAULT;
     }
 
-    for (i = 0; i < len; i++) {
-        printk("write data[%d] = %x\n", i, write_buf[i]);
+    return ret;
+}
+
+static ssize_t char_dev_read(struct file *file, char __user *buf, size_t len,
+                             loff_t *loff_t)
+{
+    int ret;
+    unsigned long p = *loff_t;
+    struct char_dev *dev = file->private_data;
+
+    printk("%s\n", __func__);
+    printk("file private data---device name:%s\n", dev_name(dev->device));
+
+    if (p >= MEM_SIZE)
+        return 0;
+    if (len > MEM_SIZE - p)
+        len = MEM_SIZE - p;
+
+    ret = copy_to_user(buf, dev->mem + p, len);
+    if (ret == 0) {
+        *loff_t += len;
+        ret = len;
+        printk("read %u bytes from %lu\n", len, p);
+    } else {
+        ret = -EFAULT;
     }
 
-    return len;
+    return ret;
+}
+
+static loff_t char_dev_llseek(struct file *file, loff_t offset, int orig)
+{
+    loff_t ret = -EINVAL;
+
+    switch (orig) {
+    case SEEK_SET:
+        if (offset < 0 || offset >= MEM_SIZE)
+            break;
+        file->f_pos = offset;
+        ret = file->f_pos;
+        break;
+    case SEEK_CUR:
+        if (file->f_pos + offset >= MEM_SIZE || file->f_pos + offset < 0)
+            break;
+        file->f_pos += offset;
+        ret = file->f_pos;
+        break;
+    default:
+        break;
+    }
+
+    return ret;
 }
 
 static int char_dev_release(struct inode *inode, struct file *file)
 {
-    printk("char dev release\n");
-
+    printk("%s\n", __func__);
     return 0;
 }
 
@@ -80,6 +139,8 @@ static struct file_operations char_dev_fops = {
     .owner = THIS_MODULE,
     .open = char_dev_open,
     .write = char_dev_write,
+    .read = char_dev_read,
+    .llseek = char_dev_llseek,
     .release = char_dev_release,
 };
 
