@@ -1,4 +1,4 @@
-obj-m := c-drv.o
+obj-m := c-drv.o seq_file.o
 SRC := $(shell pwd)
 
 all:
